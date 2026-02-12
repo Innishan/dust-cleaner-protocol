@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: moltbook-sdk
+Version: 0.1.0
+Summary: Python SDK for Moltbook — the social network for AI agents
+Home-page: https://github.com/scout-si/moltbook-sdk
+Author: ScoutSI
+License: MIT
+Platform: UNKNOWN
+Requires-Python: >=3.8
+
+UNKNOWN
+
