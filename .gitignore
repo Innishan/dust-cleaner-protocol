@@ -1,0 +1,37 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Env / secrets
+.env
+.env.*
+*.key
+*.pem
+
+# Logs / runtime
+*.log
+nohup.out
+
+# Local state / caches / outputs
+ledger.json
+replied_posts.json
+promotion_state.json
+scores.json
+scan_state.json
+sell_state.json
+coingecko_cache.json
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Next.js (UI)
+ui/dustcleaner-ui/.next/
+ui/dustcleaner-ui/node_modules/
+ui/dustcleaner-ui/.env.local
+ui/dustcleaner-ui/out/
+

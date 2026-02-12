@@ -1,0 +1,83 @@
+{
+  "0x754704bc059f8c67012fed69bc8a327a5aafb603": {
+    "symbol": "USDC"
+  },
+  "0x10Aeaf63194db8d453d4D85a06E5eFE1dd0b5417": {
+    "symbol": "wstETH"
+  },
+  "0x0555E30da8f98308EdB960aa94C0Db47230d2B9c": {
+    "symbol": "WBTC"
+  },
+  "0xEE8c0E9f1BFFb4Eb878d8f15f368A02a35481242": {
+    "symbol": "WETH"
+  },
+  "0x76f257B1DDA5cC71bee4eF637Fbdde4C801310A9": {
+    "symbol": "LINK"
+  },
+  "0x00000000efe302beaa2b3e6e1b18d08d69a9012a": {
+    "symbol": "AUSD"
+  },
+  "0xea17E5a9efEBf1477dB45082d67010E2245217f1": {
+    "symbol": "WSOL"
+  },
+  "0x5Bff88cA1442c2496f7E475E9e7786383Bc070c0": {
+    "symbol": "SFRXUSD"
+  },
+  "0x1001fF13bf368Aa4fa85F21043648079F00E1001": {
+    "symbol": "LV"
+  },
+  "0x8498312A6B3CbD158bf0c93AbdCF29E6e4F55081": {
+    "symbol": "gMON"
+  },
+  "0x2f2f2f74ab5db61AE8BD3c13ccD4Dc8c9E8A2f2f": {
+    "symbol": "ZF"
+  },
+  "0x123468b48EADbC13c65cd9c66A9913cdE4e94321": {
+    "symbol": "LONG"
+  },
+  "0x3db619ff72d877490699276061fb0fa0618fdf47": {
+    "symbol": "HOLD"
+  },
+  "0xe7cd86e13AC4309349F30B3435a9d337750fC82D": {
+    "symbol": "USDT0"
+  },
+  "0x3bd359c1119da7da1d913d1c4d2b7c461115433a": {
+    "symbol": "WMON"
+  },
+  "0x1aD7052BB331A0529c1981c3EC2bC4663498A110": {
+    "symbol": "ALLOCA"
+  },
+  "0x91ce820dD39A2B5639251E8c7837998530Fe7777": {
+    "symbol": "Motion"
+  },
+  "0x405b6330e213DED490240CbcDD64790806827777": {
+    "symbol": "moncock"
+  },
+  "0x81A224F8A62f52BdE942dBF23A56df77A10b7777": {
+    "symbol": "emo"
+  },
+  "0x42a4aA89864A794dE135B23C6a8D2E05513d7777": {
+    "symbol": "shramp"
+  },
+  "0xc09C8242Eb21B24298303799Bb5Af402A2957777": {
+    "symbol": "PEPE"
+  },
+  "0x96079813dDEC84BB1747D8e180154D8e096E7777": {
+    "symbol": "ANGAO"
+  },
+  "0xb4eE48FA7f45c501f72ce09c5de39FDE8B337777": {
+    "symbol": "MOAN"
+  },
+  "0xD793c04B87386A6bb84ee61D98e0065FdE7fdA5E": {
+    "symbol": "sAUSD"
+  },
+  "0x39B9E06f226FF6D7500c870B82333AACbD2F7777": {
+    "symbol": "NADS"
+  },
+  "0xBB97e5ec82c4fEBf60F881Cc8F489c16Dd597777": {
+    "symbol": "GMONAD"
+  },
+  "0x350035555e10d9afaf1566aaebfced5ba6c27777": {
+    "symbol": "CHOG"
+  }
+}
