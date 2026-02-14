@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+const TOKEN_BUY_URL = "https://nad.fun/tokens/0x7934935754B3f8F435cE7026F4e3e52b22cf7777";
+const NFT_MINT_URL = "https://innishan.github.io/dust-protocol-mint/";
 
 type DustItem = {
   symbol: string;
@@ -103,7 +105,14 @@ export default function Page() {
       >
         <div style={{ display: "flex", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
           <div>
-            <div style={{ fontSize: 28, fontWeight: 900 }}>Dust Cleaner Protocol</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <img
+                src="/logo.png"
+                alt="Dust Cleaner"
+                style={{ width: 34, height: 34, borderRadius: 10, objectFit: "cover" }}
+              />
+              <div style={{ fontSize: 28, fontWeight: 900 }}>Dust Cleaner Protocol</div>
+            </div>
             <div style={{ marginTop: 6, opacity: 0.85 }}>
               AI-native, on-chain dust aggregation for Monad — public wallet scan (Stage 2)
             </div>
@@ -116,6 +125,43 @@ export default function Page() {
             </div>
             <div style={{ fontSize: 12 }}>
               <b>Agent Token CA:</b> 0x7934935754B3f8F435cE7026F4e3e52b22cf7777
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 10, flexWrap: "wrap" }}>
+              <a
+                href={TOKEN_BUY_URL}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  padding: "8px 10px",
+                  borderRadius: 10,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  background: "rgba(255,255,255,0.06)",
+                  color: "white",
+                  fontSize: 12,
+                  fontWeight: 800,
+                  textDecoration: "none",
+                }}
+              >
+                Buy Token
+              </a>
+
+              <a
+                href={NFT_MINT_URL}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  padding: "8px 10px",
+                  borderRadius: 10,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  background: "rgba(255,255,255,0.06)",
+                  color: "white",
+                  fontSize: 12,
+                  fontWeight: 800,
+                  textDecoration: "none",
+                }}
+              >
+                Mint NFT
+              </a>
             </div>
           </div>
         </div>
