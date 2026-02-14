@@ -8,18 +8,25 @@ load_dotenv()
 
 app = FastAPI(title="Dust Cleaner Protocol API")
 
-# Allow local dev UI to call backend
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+cors_origins = os.getenv("CORS_ORIGINS", "")
+allowed = [o.strip() for o in cors_origins.split(",") if o.strip()]
+
+# fallback defaults (works if env var not set)
+if not allowed:
+    allowed = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-    ],
-    allow_credentials=True,
+        "https://dust-cleaner-protocol.vercel.app",
+        "https://dust-cleaner-protocol.vercel.app/",
+    ]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 class AnalyzeReq(BaseModel):
     wallet: str
 
