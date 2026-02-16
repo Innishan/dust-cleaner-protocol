@@ -30,6 +30,10 @@ export default function Page() {
   const [report, setReport] = useState<Report | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showNotes, setShowNotes] = useState(false);
+  
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [swapLoading, setSwapLoading] = useState<string | null>(null); // token being swapped OR "ALL"
+  const [swapError, setSwapError] = useState<string | null>(null);
 
   const dust = report?.dust ?? [];
 
@@ -59,6 +63,14 @@ export default function Page() {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.detail || `HTTP ${res.status}`);
       setReport(data);
+
+      // initialize checkbox map for dust tokens
+      const init: Record<string, boolean> = {};
+      (data.dust || []).forEach((d: any) => {
+        init[d.token] = false; // default unchecked
+      });
+      setSelected(init);
+      
       setShowNotes(false);
     } catch (e: any) {
       setError(e?.message || "Failed to analyze wallet");
@@ -89,6 +101,80 @@ export default function Page() {
     lines.push("3) Protocol fee is enforced on-chain. NFT holders receive monthly distribution.");
     navigator.clipboard.writeText(lines.join("\n"));
     alert("Copied demo instructions to clipboard");
+  }
+  
+  function toggleToken(token: string) {
+    setSelected((prev) => ({ ...prev, [token]: !prev[token] }));
+  }
+
+  function selectAll(on: boolean) {
+  const next: Record<string, boolean> = {};
+  dust.forEach((d) => (next[d.token] = on));
+  setSelected(next);
+  }
+
+  function getSelectedTokens() {
+  return dust.filter((d) => selected[d.token]).map((d) => d.token);
+  }
+
+  async function prepareSell(walletAddr: string, tokenAddr: string) {
+    const base = process.env.NEXT_PUBLIC_API_BASE;
+    const res = await fetch(`${base}/prepare-sell`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wallet: walletAddr, token: tokenAddr }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.detail || `HTTP ${res.status}`);
+    return data;
+  }
+
+  // This will later be replaced with real wallet signing.
+  // For now it just shows the calldata we got from backend.
+  async function swapToken(tokenAddr: string) {
+    if (!report) return;
+
+    setSwapError(null);
+    setSwapLoading(tokenAddr);
+
+    try {
+      const data = await prepareSell(report.wallet, tokenAddr);
+
+      // demo: show what we would send to wallet
+      console.log("prepare-sell result:", data);
+
+      alert(
+        `Prepared transactions for ${data.symbol}\n\n` +
+          `Approve to: ${data.approve?.to}\n` +
+          `Sell to: ${data.sell?.to}\n\n` +
+          `Next step: connect wallet + send these txs`
+      );
+    } catch (e: any) {
+      setSwapError(e?.message || "Swap failed");
+    } finally {
+      setSwapLoading(null);
+    }
+  }
+
+  async function swapMany(tokens: string[]) {
+    if (!report) return;
+
+    if (!tokens.length) {
+      setSwapError("Select at least one token.");
+      return;
+    }
+
+    setSwapError(null);
+    setSwapLoading("ALL");
+
+    try {
+      // sequential loop (wallet popups later will require this)
+      for (const tokenAddr of tokens) {
+        await swapToken(tokenAddr);
+      }
+    } finally {
+      setSwapLoading(null);
+    }
   }
 
   return (
@@ -272,6 +358,67 @@ export default function Page() {
             </button>
 
             <button
+              onClick={() => selectAll(true)}
+              disabled={!dust.length}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 12,
+                border: "1px solid #eee",
+                background: "#fff",
+                cursor: !dust.length ? "not-allowed" : "pointer",
+                fontWeight: 800,
+              }}
+            >
+              Select all
+            </button>
+
+            <button
+              onClick={() => selectAll(false)}
+              disabled={!dust.length}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 12,
+                border: "1px solid #eee",
+                background: "#fff",
+                cursor: !dust.length ? "not-allowed" : "pointer",
+                fontWeight: 800,
+              }}
+            >
+              Clear
+            </button>
+
+            <button
+              onClick={() => swapMany(getSelectedTokens())}
+              disabled={!dust.length || swapLoading !== null}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 12,
+                border: "1px solid #111",
+                background: "#111",
+                color: "#fff",
+                cursor: !dust.length || swapLoading ? "not-allowed" : "pointer",
+                fontWeight: 900,
+              }}
+            >
+              {swapLoading ? "Preparing…" : "Swap selected → MON"}
+            </button>
+
+            <button
+              onClick={() => swapMany(dust.map((d) => d.token))}
+              disabled={!dust.length || swapLoading !== null}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 12,
+                border: "1px solid #111",
+                background: "#fff",
+                cursor: !dust.length || swapLoading ? "not-allowed" : "pointer",
+                fontWeight: 900,
+              }}
+            >
+              {swapLoading ? "Preparing…" : "Swap ALL dust"}
+            </button>
+
+            <button
               onClick={() => setShowNotes((v) => !v)}
               style={{
                 padding: "10px 12px",
@@ -285,6 +432,12 @@ export default function Page() {
               {showNotes ? "Hide notes" : "Show notes"}
             </button>
           </div>
+
+          {swapError && (
+            <div style={{ marginTop: 12, padding: 12, border: "1px solid #ff8b8b", borderRadius: 12, color: "#ff8b8b" }}>
+              {swapError}
+            </div>
+          )}
 
           {/* Notes */}
           {showNotes && report.notes?.length > 0 && (
@@ -310,11 +463,40 @@ export default function Page() {
             <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
               {dust.map((d, idx) => (
                 <div key={idx} style={{ padding: 12, border: "1px solid #eee", borderRadius: 12 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                    <div style={{ fontWeight: 900 }}>{d.symbol}</div>
-                    <div style={{ opacity: 0.75 }}>
-                      {d.mon_value === null ? "—" : `${Number(d.mon_value).toFixed(4)} MON`}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+
+                    {/* LEFT SIDE: Checkbox + Symbol */}
+                    <label style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <input
+                        type="checkbox"
+                        checked={!!selected[d.token]}
+                        onChange={() => toggleToken(d.token)}
+                      />
+                      <span style={{ fontWeight: 900 }}>{d.symbol}</span>
+                    </label>
+
+                    {/* RIGHT SIDE: Value + Swap Button */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ opacity: 0.75 }}>
+                        {d.mon_value === null ? "—" : `${Number(d.mon_value).toFixed(4)} MON`}
+                      </div>
+
+                      <button
+                        onClick={() => swapMany([d.token])}
+                        disabled={swapLoading !== null}
+                        style={{
+                          padding: "6px 10px",
+                          borderRadius: 8,
+                          border: "1px solid #111",
+                          background: "#fff",
+                          fontWeight: 800,
+                          cursor: swapLoading ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        Swap
+                      </button>
                     </div>
+
                   </div>
                   <div style={{ marginTop: 8, display: "grid", gap: 4 }}>
                     <div style={{ opacity: 0.9 }}><b>Amount:</b> {d.amount}</div>
