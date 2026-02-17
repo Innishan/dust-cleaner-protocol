@@ -81,25 +81,24 @@ def analyze(req: AnalyzeReq):
 
 @app.post("/prepare-sell")
 def prepare_sell(req: PrepareSellReq):
-    """
-    Returns non-custodial calldata for:
-      1) ERC20 approve(router, amount_in)
-      2) Router sell((amount_in, amount_out_min, token, receiver, deadline))
+    try:
+        # your existing logic that builds approve + sell calldata
+        out = prepare_sell_calldata_via_lens(req.wallet, req.token)  # <- keep your real function name
+        return out
 
-    Router + quote are discovered via NADFUN_LENS.getAmountOut(token, amount_in, False).
-    IMPORTANT: This endpoint DOES NOT SIGN and DOES NOT SEND tx.
-    Frontend wallet will sign.
-    """
-    w3, err = _w3()
-    if err:
-        return {
-            "source": err,
-            "wallet": req.wallet,
-            "token": req.token,
-            "notes": [f"{err}. RPC={_get_rpc_url()}"],
-            "approve": {"to": req.token, "data": "0x", "value": "0x0"},
-            "sell": {"to": "", "data": "0x", "value": "0x0"},
-        }
+    except Exception as e:
+        # IMPORTANT: return JSON instead of crashing (no 500)
+        return JSONResponse(
+            status_code=200,
+            content={
+                "source": "error_prepare_sell",
+                "wallet": req.wallet,
+                "token": req.token,
+                "notes": [str(e)],
+                "approve": {"to": req.token, "data": "0x", "value": "0x0"},
+                "sell": {"to": "", "data": "0x", "value": "0x0"},
+            },
+        )
 
     lens_addr = os.getenv("NADFUN_LENS")
     if not lens_addr:
