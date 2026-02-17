@@ -118,7 +118,7 @@ export default function Page() {
   }
 
   async function prepareSell(walletAddr: string, tokenAddr: string) {
-    const base = process.env.NEXT_PUBLIC_API_BASE;
+    const base = (process.env.NEXT_PUBLIC_API_BASE || "https://dustcleaner-api.onrender.com").replace(/\/$/, "");
     const res = await fetch(`${base}/prepare-sell`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
