@@ -26,14 +26,13 @@ if not allowed:
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "https://dust-cleaner-protocol.vercel.app",
-        "https://dust-cleaner-protocol.vercel.app/",
     ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed,
     allow_credentials=False,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
