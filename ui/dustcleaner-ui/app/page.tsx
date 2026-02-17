@@ -394,10 +394,10 @@ export default function Page() {
               onClick={() => swapMany(getSelectedTokens())}
               disabled={!dust.length || swapLoading !== null}
               style={{
-                padding: "10px 12px",
+                padding: "10px 14px",
                 borderRadius: 12,
-                border: "1px solid #111",
-                background: "#111",
+                border: "1px solid rgba(255,255,255,0.18)",
+                background: "#rgba(255,255,255,0.10)",
                 color: "#fff",
                 cursor: !dust.length || swapLoading ? "not-allowed" : "pointer",
                 fontWeight: 900,
