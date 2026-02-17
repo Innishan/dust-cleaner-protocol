@@ -125,6 +125,10 @@ export default function Page() {
       body: JSON.stringify({ wallet: walletAddr, token: tokenAddr }),
     });
     const data = await res.json();
+    // Backend may return a JSON error with source="error_prepare_sell"
+    if (data?.source?.startsWith("error")) {
+      throw new Error((data?.notes && data.notes[0]) || "prepare-sell failed");
+    }
     if (!res.ok) throw new Error(data?.detail || `HTTP ${res.status}`);
     return data;
   }
