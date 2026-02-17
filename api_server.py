@@ -2,6 +2,7 @@ import os
 import time
 from typing import Optional
 
+from fastapi.responses import JSONResponse
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
