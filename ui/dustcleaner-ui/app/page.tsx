@@ -334,6 +334,7 @@ export default function Page() {
                 borderRadius: 12,
                 border: "1px solid #111",
                 background: "#fff",
+                color: "#111",
                 cursor: !dust.length ? "not-allowed" : "pointer",
                 fontWeight: 800,
               }}
@@ -365,6 +366,7 @@ export default function Page() {
                 borderRadius: 12,
                 border: "1px solid #eee",
                 background: "#fff",
+                color: "#111",
                 cursor: !dust.length ? "not-allowed" : "pointer",
                 fontWeight: 800,
               }}
@@ -380,6 +382,7 @@ export default function Page() {
                 borderRadius: 12,
                 border: "1px solid #eee",
                 background: "#fff",
+                color: "#111",
                 cursor: !dust.length ? "not-allowed" : "pointer",
                 fontWeight: 800,
               }}
@@ -411,6 +414,7 @@ export default function Page() {
                 borderRadius: 12,
                 border: "1px solid #111",
                 background: "#fff",
+                color: "#111",
                 cursor: !dust.length || swapLoading ? "not-allowed" : "pointer",
                 fontWeight: 900,
               }}
@@ -425,6 +429,7 @@ export default function Page() {
                 borderRadius: 12,
                 border: "1px solid #eee",
                 background: "#fff",
+                color: "#111",
                 cursor: "pointer",
                 fontWeight: 800,
               }}
@@ -489,6 +494,7 @@ export default function Page() {
                           borderRadius: 8,
                           border: "1px solid #111",
                           background: "#fff",
+                          color: "#111",
                           fontWeight: 800,
                           cursor: swapLoading ? "not-allowed" : "pointer",
                         }}
