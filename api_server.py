@@ -66,7 +66,7 @@ def _w3():
         return None, "error_rpc_not_connected"
     return w3, None
 
-def prepare_sell_calldata_via_lens(wallet: str, token: str):
+def prepare_sell_calldata_via_lens(wallet, token, amount_raw: int):
     """
     Returns calldata for:
       1) ERC20 approve(router, amount_in)
@@ -189,11 +189,56 @@ def analyze(req: AnalyzeReq):
 @app.post("/prepare-sell")
 def prepare_sell(req: PrepareSellReq):
     try:
-        # your existing logic that builds approve + sell calldata
-        out = prepare_sell_calldata_via_lens(req.wallet, req.token)  # <- keep your real function name
+        # 1) connect web3
+        w3, err = _w3()
+        if err:
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "source": err,
+                    "wallet": req.wallet,
+                    "token": req.token,
+                    "notes": [err],
+                    "approve": {"to": req.token, "data": "0x", "value": "0x0"},
+                    "sell": {"to": "", "data": "0x", "value": "0x0"},
+                },
+            )
+
+        # 2) read token balance for wallet (sell full balance)
+        token = w3.eth.contract(address=Web3.to_checksum_address(req.token), abi=ERC20_ABI)
+        bal = token.functions.balanceOf(Web3.to_checksum_address(req.wallet)).call()
+
+        if bal == 0:
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "source": "error_zero_balance",
+                    "wallet": req.wallet,
+                    "token": req.token,
+                    "notes": ["Token balance is 0, nothing to sell"],
+                    "approve": {"to": req.token, "data": "0x", "value": "0x0"},
+                    "sell": {"to": "", "data": "0x", "value": "0x0"},
+                },
+            )
+
+        # 3) IMPORTANT: pass the amount to your calldata builder
+        # You must update your function to accept amount_raw.
+        out = prepare_sell_calldata_via_lens(req.wallet, req.token, amount_raw=int(bal))
         return out
 
     except Exception as e:
+        return JSONResponse(
+            status_code=200,
+            content={
+                "source": "error_prepare_sell",
+                "wallet": req.wallet,
+                "token": req.token,
+                "notes": [str(e)],
+                "approve": {"to": req.token, "data": "0x", "value": "0x0"},
+                "sell": {"to": "", "data": "0x", "value": "0x0"},
+            },
+        )
+
         # IMPORTANT: return JSON instead of crashing (no 500)
         return JSONResponse(
             status_code=200,
@@ -261,22 +306,8 @@ def prepare_sell(req: PrepareSellReq):
             "sell": {"to": "", "data": "0x", "value": "0x0"},
         }
 
-    amount_in = int(bal * SWAP_FRACTION)
-    if amount_in > bal:
-        amount_in = bal
-    if amount_in <= 0:
-        return {
-            "source": "error_zero_amount_in",
-            "wallet": wallet,
-            "token": token,
-            "symbol": symbol,
-            "decimals": decimals,
-            "amount_raw": str(bal),
-            "amount_display": float(bal / (10 ** decimals)),
-            "notes": ["Computed amount_in is 0"],
-            "approve": {"to": token, "data": "0x", "value": "0x0"},
-            "sell": {"to": "", "data": "0x", "value": "0x0"},
-        }
+    # Sell full balance
+    amount_in = bal
 
     # Quote: token -> MON (isBuy=False)
     router_addr, mon_out = lens.functions.getAmountOut(token, amount_in, False).call()
