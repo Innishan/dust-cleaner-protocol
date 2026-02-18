@@ -66,6 +66,112 @@ def _w3():
         return None, "error_rpc_not_connected"
     return w3, None
 
+def prepare_sell_calldata_via_lens(wallet: str, token: str):
+    """
+    Returns calldata for:
+      1) ERC20 approve(router, amount_in)
+      2) router.sell((amount_in, min_out, token, wallet, deadline))
+    Uses NADFUN_LENS to get router + quote.
+    """
+    import time
+    from web3 import Web3
+
+    w3, err = _w3()
+    if err or w3 is None:
+        return {
+            "source": err or "error_unknown",
+            "wallet": wallet,
+            "token": token,
+            "notes": ["RPC not available"],
+            "approve": {"to": token, "data": "0x", "value": "0x0"},
+            "sell": {"to": "", "data": "0x", "value": "0x0"},
+        }
+
+    lens_addr = os.getenv("NADFUN_LENS")
+    if not lens_addr:
+        return {
+            "source": "error_missing_lens",
+            "wallet": wallet,
+            "token": token,
+            "notes": ["NADFUN_LENS is not set in .env / Render env vars"],
+            "approve": {"to": token, "data": "0x", "value": "0x0"},
+            "sell": {"to": "", "data": "0x", "value": "0x0"},
+        }
+
+    # config
+    slippage_bps = int(os.getenv("SLIPPAGE_BPS", "200"))  # 2%
+    deadline_seconds = int(os.getenv("SELL_DEADLINE_SECONDS", "300"))  # 5 min
+
+    wallet_cs = Web3.to_checksum_address(wallet)
+    token_cs = Web3.to_checksum_address(token)
+    lens_cs = Web3.to_checksum_address(lens_addr)
+
+    # ABIs from your repo
+    from lens_abi import LENS_ABI
+    from erc20_abi import ERC20_ABI
+    from nadfun_router_abi import NADFUN_ROUTER_ABI
+
+    lens = w3.eth.contract(address=lens_cs, abi=LENS_ABI)
+    erc = w3.eth.contract(address=token_cs, abi=ERC20_ABI)
+
+    # token metadata
+    try:
+        decimals = int(erc.functions.decimals().call())
+    except Exception:
+        decimals = 18
+
+    try:
+        symbol = erc.functions.symbol().call()
+    except Exception:
+        symbol = "UNKNOWN"
+
+    # balance
+    bal = int(erc.functions.balanceOf(wallet_cs).call())
+    if bal <= 0:
+        return {
+            "source": "prepare_sell_no_balance",
+            "wallet": wallet,
+            "token": token,
+            "symbol": symbol,
+            "decimals": decimals,
+            "amount_raw": str(bal),
+            "amount_display": 0,
+            "notes": ["No balance found for token in this wallet"],
+            "approve": {"to": token, "data": "0x", "value": "0x0"},
+            "sell": {"to": "", "data": "0x", "value": "0x0"},
+        }
+
+    # quote SELL token -> MON (isBuy=False)
+    router_addr, mon_out = lens.functions.getAmountOut(token_cs, bal, False).call()
+    router_cs = Web3.to_checksum_address(router_addr)
+    mon_out = int(mon_out)
+
+    min_out = mon_out * (10_000 - slippage_bps) // 10_000
+    deadline = int(time.time()) + deadline_seconds
+
+    # calldata approve + sell
+    approve_data = erc.functions.approve(router_cs, bal)._encode_transaction_data()
+
+    router = w3.eth.contract(address=router_cs, abi=NADFUN_ROUTER_ABI)
+    params = (bal, min_out, token_cs, wallet_cs, deadline)
+    sell_data = router.functions.sell(params)._encode_transaction_data()
+
+    return {
+        "source": "prepare_sell_calldata_via_lens",
+        "wallet": wallet,
+        "token": token,
+        "symbol": symbol,
+        "decimals": decimals,
+        "amount_raw": str(bal),
+        "amount_display": float(bal) / (10 ** decimals),
+        "router": router_cs,
+        "quote_mon_out_raw": str(mon_out),
+        "min_out_raw": str(min_out),
+        "approve": {"to": token_cs, "data": approve_data, "value": "0x0"},
+        "sell": {"to": router_cs, "data": sell_data, "value": "0x0"},
+        "notes": [],
+    }
+
 # ---------- Routes ----------
 @app.get("/health")
 def health():
