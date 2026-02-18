@@ -365,6 +365,6 @@ class MoltbookClient:
         resp = requests.post(
             f"{BASE_URL}/agents/register",
             json={"name": name, "description": description},
-            timeout=20,
+            timeout=60,
         )
         return resp.json()

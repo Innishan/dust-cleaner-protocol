@@ -1,8 +1,8 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import "@rainbow-me/rainbowkit/styles.css";
 import { useMemo, useState } from "react";
-import { useAccount, useSendTransaction, usePublicClient } from "wagmi";
+import { useAccount, useConnect, useDisconnect, useSendTransaction } from "wagmi";
 import { parseEther } from "viem";
 const TOKEN_BUY_URL = "https://nad.fun/tokens/0x7934935754B3f8F435cE7026F4e3e52b22cf7777";
 const NFT_MINT_URL = "https://innishan.github.io/dust-protocol-mint/";
@@ -35,7 +35,8 @@ export default function Page() {
   const [showNotes, setShowNotes] = useState(false);
   
   const { address, isConnected } = useAccount();
-  const publicClient = usePublicClient();
+  const { connect, connectors } = useConnect();
+  const { disconnect } = useDisconnect();
   const { sendTransactionAsync } = useSendTransaction();
 
   
@@ -141,6 +142,8 @@ export default function Page() {
     return data;
   }
 
+  // This will later be replaced with real wallet signing.
+  // For now it just shows the calldata we got from backend.
   async function swapToken(tokenAddr: string) {
     if (!report) return;
 
@@ -148,52 +151,29 @@ export default function Page() {
     setSwapLoading(tokenAddr);
 
     try {
-      if (!address) {
-        setSwapError("Connect your wallet first.");
-        return;
+      if (!connectedAddress) {
+      setSwapError("Connect your wallet first.");
+      return;
       }
 
-      // Safety: only swap for the connected wallet
-      if (report.wallet.toLowerCase() !== address.toLowerCase()) {
-        setSwapError("For safety, you can only swap dust for the connected wallet.");
-        return;
+      if (report.wallet.toLowerCase() !== connectedAddress.toLowerCase()) {
+      setSwapError("For safety, you can only swap dust for the connected wallet address. Click Analyze again after connecting your wallet.");
+      return;
       }
 
-      // 1) Ask backend to prepare calldata
-      const data = await prepareSell(address, tokenAddr);
+      const data = await prepareSell(connectedAddress, tokenAddr);
+
+      // demo: show what we would send to wallet
       console.log("prepare-sell result:", data);
 
-      // Basic validation
-      if (!data?.approve?.to || !data?.approve?.data || !data?.sell?.to || !data?.sell?.data) {
-        throw new Error("Backend did not return approve/sell calldata");
-      }
-      if (!publicClient) {
-        throw new Error("Wallet client not ready");
-      }
-
-      // 2) Send APPROVE tx
-      const approveHash = await sendTransactionAsync({
-        to: data.approve.to,
-        data: data.approve.data,
-        value: BigInt(data.approve.value || "0x0"),
-      });
-
-      // 3) Wait until approve is mined (IMPORTANT)
-      await publicClient.waitForTransactionReceipt({ hash: approveHash });
-
-      // 4) Send SELL tx
-      const sellHash = await sendTransactionAsync({
-        to: data.sell.to,
-        data: data.sell.data,
-        value: BigInt(data.sell.value || "0x0"),
-      });
-
-      await publicClient.waitForTransactionReceipt({ hash: sellHash });
-
-      alert(`Swap submitted + confirmed for ${data.symbol}`);
+      alert(
+        `Prepared transactions for ${data.symbol}\n\n` +
+          `Approve to: ${data.approve?.to}\n` +
+          `Sell to: ${data.sell?.to}\n\n` +
+          `Next step: connect wallet + send these txs`
+      );
     } catch (e: any) {
-      console.error(e);
-      setSwapError(e?.shortMessage || e?.message || "Swap failed");
+      setSwapError(e?.message || "Swap failed");
     } finally {
       setSwapLoading(null);
     }
@@ -336,9 +316,43 @@ export default function Page() {
             </button>
 
             {/* Connect / Disconnect */}
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <ConnectButton />
-            </div>
+            {!isConnected ? (
+              <button
+                onClick={() => {
+                  if (!connectors || connectors.length === 0) {
+                    alert("No wallet found. Please install/enable a wallet extension or open in a wallet browser.");
+                    return;
+                  }
+                  connect({ connector: connectors[0] });
+                }}
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: "1px solid #fff",
+                  background: "transparent",
+                  color: "#fff",
+                  fontWeight: 800,
+                  cursor: "pointer",
+                }}
+              >
+                Connect Wallet
+              </button>
+            ) : (
+              <button
+                onClick={() => disconnect()}
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: "1px solid #fff",
+                  background: "transparent",
+                  color: "#fff",
+                  fontWeight: 800,
+                  cursor: "pointer",
+                }}
+              >
+                Disconnect ({address?.slice(0, 6)}…)
+              </button>
+            )}
 
             {/* Your existing Analyze button (same style as you already had) */}
             <button
