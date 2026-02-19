@@ -9,41 +9,44 @@ import type { Chain } from "viem";
 
 const queryClient = new QueryClient();
 
-// Monad Testnet (per Monad docs)
-const monadTestnet: Chain = {
-  id: 10143,
-  name: "Monad Testnet",
+/**
+ * ✅ Monad MAINNET only
+ * chainId = 143
+ * rpc = https://rpc.monad.xyz
+ */
+const monadMainnet: Chain = {
+  id: 143,
+  name: "Monad",
   nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://rpc.testnet.monad.xyz"] },
-    public: { http: ["https://rpc.testnet.monad.xyz"] },
+    default: { http: ["https://rpc.monad.xyz"] },
+    public: { http: ["https://rpc.monad.xyz"] },
   },
   blockExplorers: {
-    default: { name: "MonadScan", url: "https://testnet.monadscan.com" },
+    default: { name: "Monad Explorer", url: "https://explorer.monad.xyz" },
   },
-  testnet: true,
 };
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "";
 
+// IMPORTANT: ssr should be false for App Router client-only wallet UI
 const config = getDefaultConfig({
   appName: "Dust Cleaner Protocol",
   projectId,
-  chains: [monadTestnet],
-  ssr: true,
+  chains: [monadMainnet],
+  ssr: false,
 });
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={darkTheme()} modalSize="compact">
-          {children}
-        </RainbowKitProvider>
+        <RainbowKitProvider theme={darkTheme()}>{children}</RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );
 }
 
+// Optional default export if your layout imports default
 export default Providers;
 
