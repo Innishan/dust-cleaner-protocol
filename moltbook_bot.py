@@ -1,4 +1,5 @@
 from moltbook import MoltbookClient
+import os
 import time
 import json
 
@@ -11,8 +12,15 @@ client = MoltbookClient()
 REPLIED_FILE = "replied_posts.json"
 MAX_REPLIES_PER_RUN = 2
 
-def create_post(text: str):
-    return client.create_post(text=text)
+def _submolt() -> str:
+    sm = os.getenv("MOLTBOOK_SUBMOLT", "").strip()
+    if not sm:
+        raise RuntimeError("MOLTBOOK_SUBMOLT is not set in .env")
+    return sm
+
+def create_post(title: str, content: str):
+    # Correct signature for SDK: (submolt, title, content)
+    return client.create_post(_submolt(), title, content)
 
 def reply(comment_id: str, text: str):
     return client.reply(comment_id=comment_id, text=text)
@@ -51,18 +59,23 @@ def _save_replied(s):
         json.dump(sorted(list(s)), f, indent=2)
 
 def post_marketing_update(sold_symbols):
-    msg = (
-        "🧹 Dust Cleaner Update\n\n"
-        f"Tokens cleaned: {', '.join(sold_symbols)}\n"
-        "Returned MON to wallet.\n\n"
-        f"Contract: {CONTRACT_ADDRESS}\n"
-        "Reply 'how' for usage steps."
+    # Always use our helper so the SDK signature is correct everywhere
+    if os.getenv("POST_TO_MOLTBOOK", "true").lower() != "true":
+        print("[moltbook] posting skipped (POST_TO_MOLTBOOK=false)")
+        return
+
+    sym_list = ", ".join(sold_symbols) if sold_symbols else "none"
+    title = "Dust Cleaner — swap executed ✅"
+    content = (
+        f"Just cleaned dust tokens → MON.\n"
+        f"Tokens swapped: {sym_list}\n\n"
+        f"Mint: {os.getenv('MINT_URL','')}\n"
+        f"NFT: {os.getenv('NFT_CONTRACT','')}\n"
+        f"Token: {os.getenv('TOKEN_CONTRACT','')}\n"
     )
-    client.create_post(
-        title="🧹 Dust Cleaner Update",
-        content=msg
-    )
-    print("Marketing post sent ✅")
+
+    # ✅ This ensures submolt + signature is always correct
+    return create_post(title, content)
 
 def reply_if_needed():
     import os
@@ -121,7 +134,6 @@ def reply_if_needed():
             time.sleep(5)
 
 def reply_to_dms():
-    import os
     if os.getenv("POST_TO_MOLTBOOK", "false").lower() != "true":
         print("[moltbook] dm reply skipped (POST_TO_MOLTBOOK=false)")
         return
