@@ -4,7 +4,7 @@ import time
 import os
 
 from stage2_public_clean import scan_wallet_dust
-from stage2_public import analyze_wallet_dust_public
+from dust_scanner import run_stage2_public_dust_scan
 from moltbook_bot import client, fetch_new_comments
 from moltbook_bot import fetch_new_comments
 from promotion import maybe_post_update, maybe_reply_to_comments
@@ -85,10 +85,12 @@ POST_TO_MOLTBOOK = os.getenv("POST_TO_MOLTBOOK", "true").lower() == "true"
 
 DUST_CLEANER_CONTRACT = os.getenv("DUST_CLEANER_CONTRACT")
 DUST_PUBLIC_MODE = os.getenv("DUST_PUBLIC_MODE", "false").lower() == "true"
-MARKETING_ENABLED = os.getenv("MARKETING_ENABLED", "false").lower() == "true"
-MARKETING_EVERY_N_RUNS = int(os.getenv("MARKETING_EVERY_N_RUNS", "5"))
 MARKETING_ENABLED = os.getenv("MARKETING_ENABLED", "true").lower() == "true"
 MARKETING_EVERY_N_RUNS = int(os.getenv("MARKETING_EVERY_N_RUNS", "6"))
+PROMOTION_ENABLED = os.getenv("PROMOTION_ENABLED", "true").lower() == "true"
+PROMOTION_EVERY_N_RUNS = int(os.getenv("PROMOTION_EVERY_N_RUNS", "3"))
+REPLY_ENABLED = os.getenv("REPLY_ENABLED", "true").lower() == "true"
+REPLY_EVERY_N_RUNS = int(os.getenv("REPLY_EVERY_N_RUNS", "2"))
 RPC_URL = os.getenv("RPC_URL")
 PRIVATE_KEY = os.getenv("PRIVATE_KEY")
 CHAIN_ID = int(os.getenv("CHAIN_ID", 143))
@@ -111,19 +113,20 @@ def run_agent_once():
     sold_symbols = []
 
     print("\n=== AGENT STARTED ===")
-    print("Moltbook:", heartbeat().get("status"))
+
+    try:
+        hb = heartbeat()
+        print("Moltbook:", (hb or {}).get("status"))
+    except Exception as e:
+        print("Moltbook: unreachable (continuing). error:", e)    
+    
     print("Agent wallet:", address)
     print("Connected to Monad:", w3.is_connected())
     print("MON balance:", w3.from_wei(w3.eth.get_balance(address), "ether"))
 
     print("\n--- Dust Analysis (Stage 2 Public) ---")
     try:
-        report = analyze_wallet_dust_public(
-            w3,
-            address,
-            CHAIN_ID,
-            0  # USD threshold not used when PUBLIC_PRICE_MODE=quote_mon
-        )
+        report = run_stage2_public_dust_scan(address)
         dust = report.get("dust", []) or []
 
         print("source:", report.get("source"))
@@ -177,7 +180,36 @@ def run_agent_once():
     except Exception as e:
         print("[stage2] error:", e)
 
+    # --- Moltbook promotion posts (templates) ---
+    try:
+        PROMOTION_ENABLED = os.getenv("PROMOTION_ENABLED", "true").lower() == "true"
+        PROMOTION_EVERY_N_RUNS = int(os.getenv("PROMOTION_EVERY_N_RUNS", "1"))
+        REPLY_ENABLED = os.getenv("REPLY_ENABLED", "true").lower() == "true"
+        REPLY_EVERY_N_RUNS = int(os.getenv("REPLY_EVERY_N_RUNS", "1"))
+    except Exception:
+        PROMOTION_ENABLED, PROMOTION_EVERY_N_RUNS = True, 1
+        REPLY_ENABLED, REPLY_EVERY_N_RUNS = True, 1
 
+    # Posts your launch/progress/stage2 updates from prompts/moltbook_templates.json
+    if PROMOTION_ENABLED and POST_TO_MOLTBOOK and (RUN_COUNT % PROMOTION_EVERY_N_RUNS == 0):
+        try:
+            maybe_post_update(client)
+            print("[promotion] template post sent ✅")
+        except Exception as e:
+            print("[promotion] skipped:", e)
+
+    # Replies to comments using prompts/moltbook_templates.json -> replies[]
+    if REPLY_ENABLED and POST_TO_MOLTBOOK and (RUN_COUNT % REPLY_EVERY_N_RUNS == 0):
+        try:
+            new_comments = fetch_new_comments(limit=20)
+            if new_comments:
+                maybe_reply_to_comments(client, new_comments)
+                print("[promotion] replied to comments ✅")
+            else:
+                print("[promotion] no new comments")
+        except Exception as e:
+            print("[promotion] reply skipped:", e)
+   
     print("\n--- Micro-Bet Simulation ---")
     agents = ["Agent_ALPHA", "Agent_BETA", "Agent_GAMMA", "Agent_DELTA"]
 
@@ -261,9 +293,16 @@ def run_agent_once():
     if sold_symbols:
         post_marketing_update(sold_symbols)
 
-    reply_if_needed()
-    reply_to_dms()
+    try:
+        reply_if_needed()
+    except Exception as e:
+        print("Moltbook reply skipped:", e)
 
+    try:
+        reply_to_dms()
+    except Exception as e:
+        print("Moltbook DM reply skipped:", e)
+    
     # --- NFT promotion: safe autopost + autoreply ---
     try:
         maybe_post_update(client)
