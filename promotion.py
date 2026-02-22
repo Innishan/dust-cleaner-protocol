@@ -38,7 +38,7 @@ def _render(text: str) -> str:
     # Fee banner
     fee_banner = os.getenv(
         "FEE_BANNER",
-        "NFT holders earn 33% of Dust Protocol fees (monthly distribution once Stage 2 goes live)."
+        "NFT holders earn 33% of Dust Protocol fees on end of every month."
     )
     text = text.replace("{{FEE_BANNER}}", fee_banner)
 
@@ -87,7 +87,7 @@ def _render_template(text: str) -> str:
     # If you have a countdown string elsewhere, keep placeholder friendly:
     countdown = os.getenv("COUNTDOWN", "").strip()
     if not countdown:
-        countdown = "Mint window: 7 days (see mint page countdown)."
+        countdown = "Mint window: 30 days (see mint page countdown)."
 
     # Replace placeholders
     out = text
@@ -228,9 +228,9 @@ def maybe_post_update(moltbook_client) -> None:
     post_body = _render(
         "Dust Protocol — Genesis mint is live on Monad.\n"
         "Minted: {{MINTED}}/{{MAX_SUPPLY}}\n"
-        "Price: 33 MON • 7-day window\n"
+        "Price: 33 MON • 30-day window\n"
         "\n"
-        "NFT Utility: holders earn 33% of Dust Protocol fees (monthly) once Stage 2 dust cleaning goes live.\n"
+        "NFT Utility: Holders earn 33% share of Dust Protocol revenue on end of every month.\n"
         "\n"
         "Mint: {{MINT_URL}}\n"
         "Contract: {{NFT_CONTRACT}}"

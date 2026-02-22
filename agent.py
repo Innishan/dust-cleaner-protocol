@@ -327,7 +327,10 @@ def run_agent_once():
     
 if __name__ == "__main__":
     while True:
-
+        print("[worker] tick — agent loop running")
+        run_agent_once()
+        time.sleep(60)
+       
         # --- Stage 2: public dust scan (wallet from .env) ---
         try:
             report = scan_wallet_dust(address)
