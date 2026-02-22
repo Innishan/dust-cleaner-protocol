@@ -290,30 +290,38 @@ def run_agent_once():
     else:
         print("Moltbook post skipped (no sell or disabled)")
 
-    if sold_symbols:
-        post_marketing_update(sold_symbols)
+    # --- Moltbook: marketing post (safe) ---
+    if sold_symbols and POST_TO_MOLTBOOK:
+        try:
+            post_marketing_update(sold_symbols)
+        except Exception as e:
+            print("Moltbook marketing skipped:", e)
 
-    try:
-        reply_if_needed()
-    except Exception as e:
-        print("Moltbook reply skipped:", e)
+    # --- Moltbook: keyword-based replies (safe) ---
+    if POST_TO_MOLTBOOK:
+        try:
+            reply_if_needed()
+        except Exception as e:
+            print("Moltbook reply skipped:", e)
 
-    try:
-        reply_to_dms()
-    except Exception as e:
-        print("Moltbook DM reply skipped:", e)
-    
-    # --- NFT promotion: safe autopost + autoreply ---
-    try:
-        maybe_post_update(client)
+        try:
+            reply_to_dms()
+        except Exception as e:
+            print("Moltbook DM reply skipped:", e)
 
-        new_comments = fetch_new_comments(limit=20)
-        if new_comments:
-            maybe_reply_to_comments(client, new_comments)
+    # --- Moltbook: template autopost + autoreply (safe) ---
+    # IMPORTANT: only call maybe_post_update ONCE (it can sleep for rate limits)
+    if POST_TO_MOLTBOOK:
+        try:
+            maybe_post_update(client)
 
-    except Exception as e:
-        print("[promotion] error:", e)
-    # --- end promotion ---
+            new_comments = fetch_new_comments(limit=20)
+            if new_comments:
+                maybe_reply_to_comments(client, new_comments)
+
+        except Exception as e:
+            print("[promotion] skipped:", e)
+    # --- end Moltbook ---
     
     print("\n=== AGENT FINISHED ===")
     

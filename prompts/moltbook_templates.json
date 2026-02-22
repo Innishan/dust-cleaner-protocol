@@ -2,21 +2,24 @@
   "posts": [
     {
       "id": "launch",
-      "text": "Dust Protocol — Genesis mint is live on Monad.\nMinted: {{MINTED}}/{{MAX_SUPPLY}}\nPrice: 33 MON • Supply: 3333 • 7-day window\n\n{{FEE_BANNER}}\n\nMint: {{MINT_URL}}\nContract: {{NFT_CONTRACT}}"
+      "title": "Dust Protocol — Genesis Mint is Live",
+      "text": "Dust Protocol — Genesis mint is live on Monad.\nMinted: {{MINTED}}/{{MAX_SUPPLY}}\nPrice: 33 MON • Supply: 3333 • 30-day window\n\n{{FEE_BANNER}}\n\nMint: {{MINT_URL}}\nContract: {{NFT_CONTRACT}}"
     },
     {
       "id": "progress",
+      "title": "Dust Protocol — Live Mint Counter + Countdown",
       "text": "Live mint counter + countdown are on the mint page.\n{{COUNTDOWN}}\nAnything unminted at the end of the window is burned by contract logic.\n\n{{FEE_BANNER}}\n\nMint: {{MINT_URL}}\nContract: {{NFT_CONTRACT}}"
     },
     {
       "id": "stage2",
+      "title": "Stage 2 — Public Dust Cleaning",
       "text": "Next milestone: Stage 2 public dust cleaning.\nUsers clean dust → protocol fee → 33% shared monthly to NFT holders.\n\n{{FEE_BANNER}}\n\nMint: {{MINT_URL}}\nContract: {{NFT_CONTRACT}}"
     }
   ],
   "replies": [
     {
       "match": ["why", "utility", "benefit", "worth"],
-      "text": "{{FEE_BANNER}}\nStage 2: public dust cleaning (users pay a fee). Plan: monthly distributions to holders.\nMint page (live counter + countdown): {{MINT_URL}}"
+      "text": "{{FEE_BANNER}}\nStage 2: public dust cleaning (users pay a fee). Plan: monthly distributions to holders.\nMint page (live counter + countdown): {{MINT_URL}}\nContract: {{NFT_CONTRACT}}"
     },
     {
       "match": ["where", "link", "mint", "how", "minting"],
@@ -24,15 +27,15 @@
     },
     {
       "match": ["trust", "scam", "safe", "verified"],
-      "text": "Everything is on-chain + public. Contract: {{NFT_CONTRACT}}\nMint page shows live counter + countdown: {{MINT_URL}}"
+      "text": "Everything is on-chain + public.\nContract: {{NFT_CONTRACT}}\nMint page shows live counter + countdown: {{MINT_URL}}"
     },
     {
       "match": ["stage 2", "fees", "rebate", "revenue", "share", "holders"],
-      "text": "{{FEE_BANNER}}\nStage 2 enables public dust cleaning with protocol fees.\nMint: {{MINT_URL}}"
+      "text": "{{FEE_BANNER}}\nStage 2 enables public dust cleaning with protocol fees.\nMint: {{MINT_URL}}\nContract: {{NFT_CONTRACT}}"
     },
     {
-      "match": ["burn", "burned", "unsold", "deadline", "7 days", "mint ends"],
-      "text": "Mint window is 7 days. After it ends, remaining unminted supply is burned by contract logic.\n{{COUNTDOWN}}\nMint: {{MINT_URL}}"
+      "match": ["burn", "burned", "unsold", "deadline", "30 days", "mint ends"],
+      "text": "Mint window is 30 days. After it ends, remaining unminted supply is burned by contract logic.\n{{COUNTDOWN}}\nMint: {{MINT_URL}}"
     },
     {
       "match": ["price", "cost"],
@@ -40,4 +43,3 @@
     }
   ]
 }
-

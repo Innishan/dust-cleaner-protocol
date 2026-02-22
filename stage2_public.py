@@ -237,9 +237,39 @@ def analyze_wallet_dust_public(w3: Web3, wallet: str, chain_id: int, dust_thresh
 
             threshold_mon = float(os.getenv("DUST_THRESHOLD_MON", "0.1"))
 
-            # If we cannot price via MON, note and skip
+            # --- NEW: allow stablecoins even if Nad.fun can't quote them ---
+            STABLES = {"USDC", "USDT", "USDT0", "AUSD", "DAI", "USD1"}
+            stable_usd_threshold = float(os.getenv("DUST_THRESHOLD_USD_STABLE", "2.0"))
+
+            # Optional: stable token address allowlist (most reliable)
+            stable_addrs = set()
+            env_addrs = os.getenv("STABLE_TOKEN_ADDRESSES", "")
+            for x in env_addrs.split(","):
+                x = x.strip()
+                if x.startswith("0x"):
+                    stable_addrs.add(x.lower())
+
             if mon_value is None:
-                report["notes"].append(f"No MON quote for {sym} ({addr}) amount={amount}")
+                looks_like_stable = (sym in STABLES) or (addr.lower() in stable_addrs) or (dec == 6)
+
+                if looks_like_stable and amount > 0 and amount < stable_usd_threshold:
+                    fallback_dust.append({
+                        "symbol": sym,
+                        "contract": addr,
+                        "token": addr,
+                        "amount": amount,
+                        "mon_value": None,
+                        "decimals": dec,
+                        "raw_balance": str(raw_bal),
+                        "usd_value": float(amount),
+                        "notes": ["stablecoin_included_without_mon_quote"],
+                    })
+                else:
+                    report["notes"].append(f"No MON quote for {sym} ({addr}) amount={amount}")
+                continue
+
+            # Not dust if >= MON threshold (for Nad.fun priced tokens)
+            if mon_value >= threshold_mon:
                 continue
 
             # Not dust if >= threshold
@@ -249,6 +279,7 @@ def analyze_wallet_dust_public(w3: Web3, wallet: str, chain_id: int, dust_thresh
             fallback_dust.append({
                 "symbol": sym,
                 "contract": addr,
+                "token": addr,
                 "amount": amount,
                 "mon_value": mon_value,
                 "decimals": dec,

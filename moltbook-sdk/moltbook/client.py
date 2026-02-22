@@ -233,7 +233,7 @@ class MoltbookClient:
                     url: str = None) -> Post:
         """Create a new post. Respects 30-min cooldown."""
         self._post_limiter.wait_if_needed()
-        payload = {"submolt": submolt, "title": title}
+        payload = {"submolt_name": submolt, "title": title}
         if content:
             payload["content"] = content
         if url:

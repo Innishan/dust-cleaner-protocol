@@ -1,4 +1,5 @@
 import os
+import random
 import json
 import time
 from web3 import Web3
@@ -66,6 +67,59 @@ def _load_templates() -> dict:
     path = os.path.join("prompts", "moltbook_templates.json")
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
+def _render_template(text: str) -> str:
+    """
+    Replace {{VARS}} in templates using .env.
+    Safe fallback: if missing, keep it readable.
+    """
+    minted = _get_minted_count()
+    max_supply = os.getenv("MAX_SUPPLY", "3333").strip() or "3333"
+    mint_url = os.getenv("MINT_URL", "").strip()
+    nft_contract = os.getenv("NFT_CONTRACT", "").strip()
+    token_contract = os.getenv("TOKEN_CONTRACT", "").strip()
+
+    fee_banner = os.getenv("FEE_BANNER", "").strip()
+    if not fee_banner:
+        # optional default
+        fee_banner = "Fees are enforced on-chain."
+
+    # If you have a countdown string elsewhere, keep placeholder friendly:
+    countdown = os.getenv("COUNTDOWN", "").strip()
+    if not countdown:
+        countdown = "Mint window: 7 days (see mint page countdown)."
+
+    # Replace placeholders
+    out = text
+    out = out.replace("{{MINTED}}", minted)
+    out = out.replace("{{MAX_SUPPLY}}", max_supply)
+    out = out.replace("{{MINT_URL}}", mint_url)
+    out = out.replace("{{NFT_CONTRACT}}", nft_contract)
+    out = out.replace("{{TOKEN_CONTRACT}}", token_contract)
+    out = out.replace("{{FEE_BANNER}}", fee_banner)
+    out = out.replace("{{COUNTDOWN}}", countdown)
+
+    return out
+
+
+def _pick_post(templates: dict) -> tuple[str, str]:
+    """
+    Returns (title, body) for create_post()
+    Uses templates["posts"] which is a list of {id, text}.
+    """
+    posts = templates.get("posts", [])
+    if not posts:
+        raise RuntimeError("No posts found in prompts/moltbook_templates.json")
+
+    post = random.choice(posts)  # needs: import random at top
+    post_id = str(post.get("id", "update")).strip() or "update"
+    text = str(post.get("text", "")).strip()
+    if not text:
+        raise RuntimeError(f"Post '{post_id}' has empty text")
+
+    title = f"Dust Protocol — {post_id}"
+    body = _render_template(text)
+    return title, body
 
 def _post_moltbook(moltbook_client, title: str, body: str):
     """

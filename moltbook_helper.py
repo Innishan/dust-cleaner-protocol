@@ -12,5 +12,5 @@ def heartbeat():
 def post_build_log(title: str, content: str):
     mb = get_client()
     # posts are rate limited by SDK
-    return mb.create_post(submolt="builds", title=title, content=content)
-
+    submolt = os.getenv("MOLTBOOK_SUBMOLT", "trading").strip()
+    return mb.create_post(submolt=submolt, title=title, content=content)
