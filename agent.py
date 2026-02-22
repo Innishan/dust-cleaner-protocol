@@ -114,6 +114,10 @@ def run_agent_once():
 
     print("\n=== AGENT STARTED ===")
 
+    print("[env] has MOLTBOOK_API_KEY:", "MOLTBOOK_API_KEY" in os.environ)
+    print("[env] MOLTBOOK_API_KEY length:", len(os.getenv("MOLTBOOK_API_KEY","")))
+    print("[env] MOLTBOOK_SUBMOLT:", repr(os.getenv("MOLTBOOK_SUBMOLT","")))
+
     try:
         hb = heartbeat()
         print("Moltbook:", (hb or {}).get("status"))
