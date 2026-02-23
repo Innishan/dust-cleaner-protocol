@@ -304,10 +304,10 @@ def run_agent_once():
 
     # --- Moltbook: DM replies (safe) ---
     if POST_TO_MOLTBOOK:
-        #  try:
-        #      reply_to_dms()
-        #  except Exception as e:
-        #      print("Moltbook DM reply skipped:", e)
+        try:
+            reply_to_dms()
+        except Exception as e:
+            print("Moltbook DM reply skipped:", e)
 
     # --- Moltbook: template autopost + autoreply (safe) ---
     # IMPORTANT: only call maybe_post_update ONCE (it can sleep for rate limits)
