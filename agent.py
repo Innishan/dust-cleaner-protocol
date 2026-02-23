@@ -8,7 +8,7 @@ from dust_scanner import run_stage2_public_dust_scan
 from moltbook_bot import client, fetch_new_comments
 from moltbook_bot import fetch_new_comments
 from promotion import maybe_post_update, maybe_reply_to_comments
-from moltbook_bot import post_marketing_update, reply_if_needed, reply_to_dms
+from moltbook_bot import post_marketing_update, reply_to_dms
 from marketing import build_marketing_post
 from swap_executor import execute_safe_swap
 from liquidity_checker import can_swap_simulation
@@ -301,13 +301,8 @@ def run_agent_once():
         except Exception as e:
             print("Moltbook marketing skipped:", e)
 
-    # --- Moltbook: keyword-based replies (safe) ---
+    # --- Moltbook: DM replies (safe) ---
     if POST_TO_MOLTBOOK:
-        try:
-            reply_if_needed()
-        except Exception as e:
-            print("Moltbook reply skipped:", e)
-
         try:
             reply_to_dms()
         except Exception as e:
@@ -322,6 +317,9 @@ def run_agent_once():
             new_comments = fetch_new_comments(limit=20)
             if new_comments:
                 maybe_reply_to_comments(client, new_comments)
+                print(f"[promotion] replied to {len(new_comments)} comment(s) ✅")
+            else:
+                print("[promotion] no new comments")
 
         except Exception as e:
             print("[promotion] skipped:", e)
@@ -330,10 +328,17 @@ def run_agent_once():
     print("\n=== AGENT FINISHED ===")
     
 if __name__ == "__main__":
+    print("🚀 Agent daemon started (24/7 mode)")
     while True:
-        print("[worker] tick — agent loop running")
-        run_agent_once()
-        time.sleep(60)
+        try:
+            run_agent_once()
+        except Exception as e:
+            print("🔥 Agent crashed in run loop:", e)
+
+        # Wait 10 minutes between cycles
+        sleep_seconds = int(os.getenv("AGENT_INTERVAL_SECONDS", "600"))
+        print(f"⏳ Sleeping for {sleep_seconds} seconds...\n")
+        time.sleep(sleep_seconds)
        
         # --- Stage 2: public dust scan (wallet from .env) ---
         try:
