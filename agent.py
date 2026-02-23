@@ -196,7 +196,7 @@ def run_agent_once():
         REPLY_ENABLED, REPLY_EVERY_N_RUNS = True, 1
 
     # Posts your launch/progress/stage2 updates from prompts/moltbook_templates.json
-    if PROMOTION_ENABLED and POST_TO_MOLTBOOK and (RUN_COUNT % PROMOTION_EVERY_N_RUNS == 0):
+    if POST_TO_MOLTBOOK:
         try:
             maybe_post_update(client)
             print("[promotion] template post sent ✅")
@@ -304,10 +304,10 @@ def run_agent_once():
 
     # --- Moltbook: DM replies (safe) ---
     if POST_TO_MOLTBOOK:
-        try:
-            reply_to_dms()
-        except Exception as e:
-            print("Moltbook DM reply skipped:", e)
+      #  try:
+      #      reply_to_dms()
+      #  except Exception as e:
+      #      print("Moltbook DM reply skipped:", e)
 
     # --- Moltbook: template autopost + autoreply (safe) ---
     # IMPORTANT: only call maybe_post_update ONCE (it can sleep for rate limits)
