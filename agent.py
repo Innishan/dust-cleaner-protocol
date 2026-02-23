@@ -148,7 +148,7 @@ def run_agent_once():
             print("Dust found:")
             for d in dust:
                 sym = d.get("symbol", "TOKEN")
-                token_ca = d.get("contract")
+                token_ca = d.get("contract") or d.get("token")
                 mon_value = d.get("mon_value")
 
                 print(f"- {sym} amount={d.get('amount')} mon_value={mon_value} {token_ca}")
