@@ -157,14 +157,15 @@ def run_agent_once():
                 if not token_ca:
                     continue
 
-                # Skip stablecoin if you want (optional)
-                if str(sym).upper() == "USDC":
-                    print("Skipping USDC — stablecoin")
+                # Stablecoins: keep in report, but don't try Nad.fun swap path
+                STABLES = {"USDC", "USDT", "USDT0", "AUSD", "DAI", "USD1"}
+                if str(sym).upper() in STABLES:
+                    print(f"Stablecoin detected (will not Nad.fun swap): {sym}")
                     continue
 
                 # Liquidity check
                 if not can_swap_simulation(w3, token_ca):
-                    print(f"Skipping {sym} — no liquidity")
+                    print(f"Skipping {sym} — no Nad.fun liquidity (will require Uniswap route)")
                     continue
 
                 # Execute the same swap path you already use
