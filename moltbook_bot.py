@@ -2,13 +2,16 @@ from moltbook import MoltbookClient
 import os
 import time
 import json
+from dotenv import load_dotenv
+
+load_dotenv()
 
 AGENT_NAME = "MonadMarketMakerBot"
 CONTRACT_ADDRESS = "0x97c4fe240555b7D425AdB82CA16876d5BaE0d8A5"
 
 KEYWORDS = ["dust", "swap", "how", "clean", "mon", "fee"]
 
-client = MoltbookClient()
+client = MoltbookClient(api_key=os.getenv("MOLTBOOK_API_KEY"))
 REPLIED_FILE = "replied_posts.json"
 MAX_REPLIES_PER_RUN = 2
 

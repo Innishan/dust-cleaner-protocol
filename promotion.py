@@ -186,7 +186,7 @@ def _cooldown_ok(state: dict, key: str, cooldown_minutes: int) -> bool:
         return True
     return (time.time() - last) >= (cooldown_minutes * 60)
 
-def maybe_post_update(moltbook_client) -> None:
+def maybe_post_update(moltbook_client):
     """
     Posts at most PROMOTE_MAX_POSTS_PER_DAY per UTC day.
     Uses templates in order: launch -> progress -> stage2 -> (repeat last)
@@ -224,31 +224,37 @@ def maybe_post_update(moltbook_client) -> None:
     if idx >= len(posts):
         idx = len(posts) - 1  # keep using last one
 
-    # Build the post body (this is what we will publish)
-    post_body = _render(
-        "Dust Protocol — Genesis mint is live on Monad.\n"
-        "Minted: {{MINTED}}/{{MAX_SUPPLY}}\n"
-        "Price: 33 MON • 30-day window\n"
-        "\n"
-        "NFT Utility: Holders earn 33% share of Dust Protocol revenue on end of every month.\n"
-        "\n"
-        "Mint: {{MINT_URL}}\n"
-        "Contract: {{NFT_CONTRACT}}"
-    )
+    # Build post from templates file (posts[idx]["text"])
+    # NOTE: this will include your 30-day wording once you update moltbook_templates.json
+    post_template = str(posts[idx].get("text", "")).strip()
+    if not post_template:
+        return None
 
-    title = os.getenv("NFT_POST_TITLE", "Dust Protocol — Genesis Mint").strip()
+    post_body = _render(post_template)
+
+    # Title: prefer env override, else use template id
+    post_id = str(posts[idx].get("id", "update")).strip() or "update"
+    title = os.getenv("NFT_POST_TITLE", f"Dust Protocol — {post_id}").strip()
+
+    # Actually post and RETURN the created post object
     try:
-        _post_moltbook(moltbook_client, title=title, body=post_body)
+        post = _post_moltbook(moltbook_client, title=title, body=post_body)
     except Exception as e:
-        print("[promotion] posting skipped (moltbook unreachable):", e)
+        msg = str(e)
+        print("[promotion] post failed:", e)
+
+        # If forbidden, disable promotion automatically for this run
+        if "403" in msg or "Forbidden" in msg:
+            print("[promotion] posting forbidden — skipping all future autopost attempts.")
         return
-
-    text = _render(posts[idx]["text"])
-
+    
+    # Update state ONLY if post succeeded
     state["posts_today"] = int(state.get("posts_today", 0)) + 1
     state["post_index"] = idx + 1
     state["last_post_ts"] = time.time()
     _save_state(state)
+
+    return post
 
 def maybe_reply_to_comments(moltbook_client, new_comments: list[dict]) -> None:
     """

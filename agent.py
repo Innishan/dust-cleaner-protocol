@@ -198,8 +198,12 @@ def run_agent_once():
     # Posts your launch/progress/stage2 updates from prompts/moltbook_templates.json
     if POST_TO_MOLTBOOK:
         try:
-            maybe_post_update(client)
-            print("[promotion] template post sent ✅")
+            p = maybe_post_update(client)
+            if p:
+                pid = getattr(p, "id", None) or (p.get("id") if isinstance(p, dict) else None)
+                print("[promotion] template post sent ✅", pid or "")
+            else:
+                print("[promotion] no post sent (skipped or blocked)")
         except Exception as e:
             print("[promotion] skipped:", e)
 
@@ -310,20 +314,17 @@ def run_agent_once():
             print("Moltbook DM reply skipped:", e)
 
     # --- Moltbook: template autopost + autoreply (safe) ---
-    # IMPORTANT: only call maybe_post_update ONCE (it can sleep for rate limits)
+    # Posting is currently blocked (403). So: REPLY ONLY.
     if POST_TO_MOLTBOOK:
         try:
-            maybe_post_update(client)
-
+            # ✅ only comment-replies (no posting)
             new_comments = fetch_new_comments(limit=20)
             if new_comments:
                 maybe_reply_to_comments(client, new_comments)
-                print(f"[promotion] replied to {len(new_comments)} comment(s) ✅")
             else:
                 print("[promotion] no new comments")
-
         except Exception as e:
-            print("[promotion] skipped:", e)
+            print("[promotion] reply skipped:", e)
     # --- end Moltbook ---
     
     print("\n=== AGENT FINISHED ===")
